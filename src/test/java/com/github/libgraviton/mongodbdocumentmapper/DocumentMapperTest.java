@@ -101,7 +101,7 @@ public class DocumentMapperTest {
   }
 
   @Test
-  public void testGetValue() {
+  public void testGetValue() throws DocumentMapperException {
     Document complex = new Document(
         "subkey", new Document(
             "subkey2", new Document(
@@ -112,9 +112,26 @@ public class DocumentMapperTest {
         )
     );
 
+    Document docB = new Document("someProp", complex);
+    docB.put("docList", List.of(new Document("fred", "hans")));
+
     DocumentMapper documentMapper = new DocumentMapper();
 
+    assertEquals("hans", documentMapper.getValue(docB, "docList.0.fred"));
+    assertEquals("fred", documentMapper.getValue(docB, "someProp.subkey.subkey2.subkey3.subkey4.0.subDude"));
+  }
 
+  @Test
+  public void testGetValueFirstNotNull() throws DocumentMapperException {
+    Document docB = new Document("first", "key");
+
+    DocumentMapper documentMapper = new DocumentMapper();
+
+    Object value = documentMapper.getValue(docB, "not-existing-key", "first.0.key.whatever", "first");
+    Object nothingMatches = documentMapper.getValue(docB, "not-existing-key", "first.0.key.whatever");
+
+    assertEquals("key", value);
+    assertNull(nothingMatches);
   }
 
   @Test
